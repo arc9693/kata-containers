@@ -15,6 +15,7 @@ kubernetes_dir="$(dirname "$(readlink -f "$0")")"
 source "${kubernetes_dir}/../../gha-run-k8s-common.sh"
 # shellcheck disable=2154
 tools_dir="${repo_root_dir}/tools"
+kata_tarball_dir="${2:-kata-artifacts}"
 
 DOCKER_REGISTRY=${DOCKER_REGISTRY:-quay.io}
 DOCKER_REPO=${DOCKER_REPO:-kata-containers/kata-deploy-ci}
@@ -234,11 +235,6 @@ function cleanup() {
 	kubectl delete -f "${tools_dir}/packaging/kata-deploy/kata-rbac/base/kata-rbac.yaml"
 }
 
-install_kata_tools_placeholder() {
-	echo "Kata tools will be installed (for the genpolicy app)"\
-		"after CI picks up the gha yaml changes required to test that installation."
-}
-
 function main() {
 	export KATA_HOST_OS="${KATA_HOST_OS:-}"
 	export K8S_TEST_HOST_TYPE="${K8S_TEST_HOST_TYPE:-}"
@@ -254,7 +250,7 @@ function main() {
 		setup-crio) setup_crio ;;
 		deploy-k8s) deploy_k8s ;;
 		install-bats) install_bats ;;
-		install-kata-tools) install_kata_tools_placeholder ;;
+		install-kata-tools) install_kata_tools ;;
 		install-kubectl) install_kubectl ;;
 		get-cluster-credentials) get_cluster_credentials ;;
 		deploy-kata-aks) deploy_kata "aks" ;;
