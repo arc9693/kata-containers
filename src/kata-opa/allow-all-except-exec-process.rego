@@ -15,7 +15,6 @@ default ListRoutesRequest := true
 default MemHotplugByProbeRequest := true
 default OnlineCPUMemRequest := true
 default PauseContainerRequest := true
-default PullImageRequest := true
 default ReadStreamRequest := true
 default RemoveContainerRequest := true
 default RemoveStaleVirtiofsShareMountsRequest := true
