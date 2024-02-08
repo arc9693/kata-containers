@@ -14,6 +14,8 @@ setup() {
 	issue_url="https://github.com/kata-containers/kata-containers/issues/8906"
 	[ "${KATA_HYPERVISOR}" == "qemu-se" ] && skip "test not working for IBM Z LPAR (see ${issue_url})"
 	get_pod_config_dir
+        policy_settings_dir="$(create_tmp_policy_settings_dir "${pod_config_dir}")"
+        auto_generate_policy "${policy_settings_dir}" "${pod_config_dir}/inotify-configmap-pod.yaml"
 }
 
 @test "configmap update works, and preserves symlinks" {
@@ -35,8 +37,6 @@ setup() {
         # Verify we saw the update
         result=$(kubectl get pod "$pod_name" --output="jsonpath={.status.containerStatuses[]}")
         echo $result | grep -vq Error
-
-        kubectl delete configmap cm
 }
 
 teardown() {
@@ -46,5 +46,6 @@ teardown() {
 	[ "${KATA_HYPERVISOR}" == "qemu-se" ] && skip "test not working for IBM Z LPAR (see ${issue_url})"
 	# Debugging information
 	kubectl describe "pod/$pod_name"
+	kubectl delete configmap cm
 	kubectl delete pod "$pod_name"
 }
