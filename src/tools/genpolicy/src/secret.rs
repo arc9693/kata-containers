@@ -6,9 +6,11 @@
 // Allow K8s YAML field names.
 #![allow(non_snake_case)]
 
+use crate::agent;
 use crate::obj_meta;
 use crate::pod;
 use crate::policy;
+use crate::settings;
 use crate::yaml;
 
 use async_trait::async_trait;
@@ -19,18 +21,19 @@ use std::collections::BTreeMap;
 /// See Reference / Kubernetes API / Config and Storage Resources / Secret.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Secret {
+    #[serde(skip)]
+    doc_mapping: serde_yaml::Value,
+
     apiVersion: String,
     kind: String,
-    pub metadata: obj_meta::ObjectMeta,
+    metadata: obj_meta::ObjectMeta,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<BTreeMap<String, String>>,
+    data: Option<BTreeMap<String, String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     immutable: Option<bool>,
     // TODO: additional fields.
-    #[serde(skip)]
-    doc_mapping: serde_yaml::Value,
 }
 
 impl Secret {
@@ -67,12 +70,7 @@ pub fn get_value(value_from: &pod::EnvVarSource, secrets: &Vec<Secret>) -> Optio
 
 #[async_trait]
 impl yaml::K8sResource for Secret {
-    async fn init(
-        &mut self,
-        _use_cache: bool,
-        doc_mapping: &serde_yaml::Value,
-        _silent_unsupported_fields: bool,
-    ) {
+    async fn init(&mut self, _use_cache: bool, doc_mapping: &serde_yaml::Value, _silent: bool) {
         self.doc_mapping = doc_mapping.clone();
     }
 
@@ -87,9 +85,9 @@ impl yaml::K8sResource for Secret {
     fn get_container_mounts_and_storages(
         &self,
         _policy_mounts: &mut Vec<policy::KataMount>,
-        _storages: &mut Vec<policy::SerializedStorage>,
+        _storages: &mut Vec<agent::Storage>,
         _container: &pod::Container,
-        _agent_policy: &policy::AgentPolicy,
+        _settings: &settings::Settings,
     ) {
         panic!("Unsupported");
     }
@@ -106,7 +104,7 @@ impl yaml::K8sResource for Secret {
         panic!("Unsupported");
     }
 
-    fn get_annotations(&self) -> Option<BTreeMap<String, String>> {
+    fn get_annotations(&self) -> &Option<BTreeMap<String, String>> {
         panic!("Unsupported");
     }
 

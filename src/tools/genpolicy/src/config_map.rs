@@ -6,9 +6,11 @@
 // Allow K8s YAML field names.
 #![allow(non_snake_case)]
 
+use crate::agent;
 use crate::obj_meta;
 use crate::pod;
 use crate::policy;
+use crate::settings;
 use crate::yaml;
 
 use async_trait::async_trait;
@@ -42,7 +44,6 @@ impl ConfigMap {
         debug!("Reading ConfigMap...");
         let config_map: ConfigMap = serde_yaml::from_reader(File::open(file)?)?;
         debug!("\nRead ConfigMap => {:#?}", config_map);
-
         Ok(config_map)
     }
 
@@ -97,9 +98,9 @@ impl yaml::K8sResource for ConfigMap {
     fn get_container_mounts_and_storages(
         &self,
         _policy_mounts: &mut Vec<policy::KataMount>,
-        _storages: &mut Vec<policy::SerializedStorage>,
+        _storages: &mut Vec<agent::Storage>,
         _container: &pod::Container,
-        _agent_policy: &policy::AgentPolicy,
+        _settings: &settings::Settings,
     ) {
         panic!("Unsupported");
     }
@@ -116,11 +117,8 @@ impl yaml::K8sResource for ConfigMap {
         panic!("Unsupported");
     }
 
-    fn get_annotations(&self) -> Option<BTreeMap<String, String>> {
-        if let Some(annotations) = &self.metadata.annotations {
-            return Some(annotations.clone());
-        }
-        None
+    fn get_annotations(&self) -> &Option<BTreeMap<String, String>> {
+        &self.metadata.annotations
     }
 
     fn use_host_network(&self) -> bool {
